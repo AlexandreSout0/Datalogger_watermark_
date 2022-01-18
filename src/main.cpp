@@ -53,7 +53,7 @@
 
 //============================================= Funções ========================================= //
 
-float ReadFrequency (int swp);
+int ReadFrequency (int swp);
 void getData();
 
 
@@ -84,7 +84,7 @@ void loop()
   delay(5000);
 }
 
-float ReadFrequency (int swp)
+int ReadFrequency (int swp)
 {
 
   delay(200);
@@ -149,12 +149,10 @@ float ReadFrequency (int swp)
       kPa = 9 - (Hz - 4600) * 0.004286    for 4330 <= Hz <= 6430
       kPa = 15 - (Hz - 2820) * 0.003974   for 2820 <= Hz <= 4330
       kPa = 35 - (Hz - 1110) * 0.01170    for 1110 <= Hz <= 2820
-      
       kPa = 55 - (Hz - 770) * 0.05884     for 770 <= Hz <= 1110
       kPa = 75 - (Hz - 600) * 0.1176      for 600 <= Hz <= 770
       kPa = 100 - (Hz - 485) * 0.2174     for 485 <= Hz <= 600
       kPa = 200 - (Hz - 293) * 0.5208     for 293 <= Hz <= 485
-    
       kPa = 200                           for Hz < 293
 */
 
@@ -168,7 +166,6 @@ float ReadFrequency (int swp)
   if (irrometerfrequencyTemp >= 293 && irrometerfrequencyTemp <= 485)
   {
     soil_moisture = 200 - (irrometerfrequencyTemp - 293) * 0.5208;
-
   }
 
   if (irrometerfrequencyTemp > 485 && irrometerfrequencyTemp <= 600)
@@ -205,7 +202,9 @@ float ReadFrequency (int swp)
   {
     soil_moisture = 0;
   }
-
+  
+  return soil_moisture;
+  
 }
 
 
