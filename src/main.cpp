@@ -149,10 +149,12 @@ float ReadFrequency (int swp)
       kPa = 9 - (Hz - 4600) * 0.004286    for 4330 <= Hz <= 6430
       kPa = 15 - (Hz - 2820) * 0.003974   for 2820 <= Hz <= 4330
       kPa = 35 - (Hz - 1110) * 0.01170    for 1110 <= Hz <= 2820
+      
       kPa = 55 - (Hz - 770) * 0.05884     for 770 <= Hz <= 1110
       kPa = 75 - (Hz - 600) * 0.1176      for 600 <= Hz <= 770
       kPa = 100 - (Hz - 485) * 0.2174     for 485 <= Hz <= 600
       kPa = 200 - (Hz - 293) * 0.5208     for 293 <= Hz <= 485
+    
       kPa = 200                           for Hz < 293
 */
 
@@ -169,25 +171,40 @@ float ReadFrequency (int swp)
 
   }
 
-  if (irrometerfrequencyTemp > 293 && irrometerfrequencyTemp < 485)
+  if (irrometerfrequencyTemp > 485 && irrometerfrequencyTemp <= 600)
   {
     soil_moisture  = 100 - (irrometerfrequencyTemp - 485) * 0.2174;
   }
   
-  if (irrometerfrequencyTemp < 293)
+  if (irrometerfrequencyTemp > 600 && irrometerfrequencyTemp <= 770)
   {
-
-  }
-  if (irrometerfrequencyTemp < 293)
-  {
-
-  }
-  if (irrometerfrequencyTemp < 293)
-  {
-
+    soil_moisture = 75 - (irrometerfrequencyTemp - 600) * 0.1176;
   }
 
+  if (irrometerfrequencyTemp > 770 && irrometerfrequencyTemp <= 1110)
+  {
+    soil_moisture = 55 - (irrometerfrequencyTemp - 770) * 0.05884;
+  }
 
+  if (irrometerfrequencyTemp > 1110 && irrometerfrequencyTemp <= 2820)
+  {
+   soil_moisture = 35 - (irrometerfrequencyTemp - 1110) * 0.01170;
+  }
+  
+   if (irrometerfrequencyTemp > 2820 && irrometerfrequencyTemp <= 4330)
+  {
+    soil_moisture = 15 - (irrometerfrequencyTemp - 2820) * 0.003974;
+  }
+
+  if (irrometerfrequencyTemp > 4330 && irrometerfrequencyTemp <= 6430)
+  {
+    soil_moisture = 9 - (irrometerfrequencyTemp - 4600) * 0.004286;
+  }
+
+  if (irrometerfrequencyTemp > 6430)
+  {
+    soil_moisture = 0;
+  }
 
 }
 
