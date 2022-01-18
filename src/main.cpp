@@ -36,13 +36,96 @@
 
 #include <Arduino.h>
 
+
+
+//==================================== Mapeamento de Hardware =================================== //
+
+#define pwr_en 7 // Power Enable
+#define swp_freq 6 // Frequency input
+#define s0 4 // Control Multiplex
+#define s1 5 // Control Multiplex
+
+
+//=============================================================================================== //
+
+
+
+
+//============================================= Funções ========================================= //
+
+float ReadFrequency (int swp);
+
+
+
+//=============================================================================================== //
+
+
+
+
 void setup()
+{
+  Serial.begin(115200);
+  Serial.println("Start");
+
+  pinMode(pwr_en, OUTPUT);
+  pinMode (s0, OUTPUT);
+  pinMode (s1, OUTPUT);
+  pinMode(swp_freq, INPUT);
+  digitalWrite(s0, LOW);
+  digitalWrite(s1, LOW);
+  digitalWrite(pwr_en, LOW);
+  
+}
+
+void loop()
 {
 
 }
 
-void loop()
-
+float ReadFrequency (int swp)
 {
-  
+
+  delay(200);
+  if (swp = 1)
+  {
+    digitalWrite(s0,LOW);
+    digitalWrite(s0,LOW);
+  }
+  if (swp = 2)
+  {
+    digitalWrite(s0,LOW);
+    digitalWrite(s0,HIGH);
+  }
+  if (swp = 3)
+  {
+    digitalWrite(s0,HIGH);
+    digitalWrite(s0,LOW);
+  }
+  if (swp = 4)
+  {
+    digitalWrite(s0,HIGH);
+    digitalWrite(s0,HIGH);
+  }
+
+  delay(1000);
+  float totalTime = 0;
+  int highPulseTime = 0;
+  int lowPulseTime = 0;
+  int sample = 10;
+  float irrometerfrequencyTemp = 0;
+  float frequencyTemp = 0;
+  float freqcumulative = 0;
+
+  for (int i = 0 ; 1 < sample; i++)
+  {
+      highPulseTime = 0;
+      lowPulseTime = 0;
+      totalTime = 0;
+      
+      highPulseTime = pulseIn(swp_freq, HIGH);
+      lowPulseTime = pulseIn(swp_freq, LOW);
+      totalTime = highPulseTime + lowPulseTime;
+
+  }
+
 }
