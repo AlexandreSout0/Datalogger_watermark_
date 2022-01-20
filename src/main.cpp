@@ -46,11 +46,11 @@
 #define s1 5 // Control Multiplex
 
 // Data e hora de inicialização do esp32
-#define DIA 29
-#define MES 10
-#define ANO 2021
-#define HORA 14
-#define MINUTOS 6
+#define DIA 20
+#define MES 1
+#define ANO 2022
+#define HORA 8
+#define MINUTOS 39
 #define SEGUNDOS 30
 
 //=============================================================================================== //
@@ -75,7 +75,6 @@ void setup()
   Serial.begin(9600);
   Serial.println("Start");
   rtc.setTime(SEGUNDOS, MINUTOS, HORA, DIA, MES, ANO);  // 17th Jan 2021 15:24:30
-  rtc.setTime(1609459200);  // 1st Jan 2021 00:00:00
   pinMode(pwr_en, OUTPUT);
   pinMode (s0, OUTPUT);
   pinMode (s1, OUTPUT);
@@ -225,21 +224,25 @@ void getDataDebug()
   delay(100);
 
   Serial.println("====================================================================");
+  String time = rtc.getTime("%d/%m/%y %H:%M:%S");
   /****** SWP_1 *******/
   int irrometerfrequencyTemp1 = ReadFrequency(1);
-  Serial.println("Primary Soil Sensor = " + String(irrometerfrequencyTemp1) + " Kpa");
+  Serial.println(String(time) + " Primary Soil Sensor = " + String(irrometerfrequencyTemp1) + " Kpa");
   delay(100);
+  time = rtc.getTime("%d/%m/%y %H:%M:%S");
    /****** SWP_2 *******/
   int irrometerfrequencyTemp2 = ReadFrequency(2);
-  Serial.println("Secondary Soil Sensor = " + String(irrometerfrequencyTemp2) + " Kpa");
+  Serial.println(String(time) + " Secondary Soil Sensor = " + String(irrometerfrequencyTemp2) + " Kpa");
   delay(100);
+  time = rtc.getTime("%d/%m/%y %H:%M:%S");
   /****** SWP_3 *******/
   int irrometerfrequencyTemp3 = ReadFrequency(3);
-  Serial.println("Third Soil Sensor = " + String(irrometerfrequencyTemp3) + " Kpa");
+  Serial.println(String(time) + " Third Soil Sensor = " + String(irrometerfrequencyTemp3) + " Kpa");
   delay(100);
+  time = rtc.getTime("%d/%m/%y %H:%M:%S");
   /****** SWP_4 *******/
   int irrometerfrequencyTemp4 = ReadFrequency(4);
-  Serial.println("Fourth Soil Sensor = " + String(irrometerfrequencyTemp4) + " Kpa");
+  Serial.println(String(time) + " Fourth Soil Sensor = " + String(irrometerfrequencyTemp4) + " Kpa");
   delay(100);
   Serial.println("====================================================================");
 
