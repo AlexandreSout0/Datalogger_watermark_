@@ -37,6 +37,9 @@
 #include <Arduino.h>
 #include <ESP32Time.h>
 
+#include "FS.h"
+#include <SPIFFS.h>
+
 
 //==================================== Mapeamento de Hardware =================================== //
 
@@ -53,6 +56,8 @@
 #define MINUTOS 39
 #define SEGUNDOS 30
 
+
+#define TIME_ON 10000 // Time before to sending logs on serial port
 //=============================================================================================== //
 
 
@@ -60,8 +65,14 @@
 
 //============================================= Funções ========================================= //
 
-int ReadFrequency (int swp);
-void getDataDebug();
+int ReadFrequency (int swp); // Read Sensor Soil Moisure
+void getDataDebug(); // Print Serial Port Debug
+bool writeFile(String values, String pathFile, bool appending); // Write file
+String readFile(String pathFile);// Read file
+bool deleteFile(String pathFile); // Delete file
+void renameFile(String pathFileFrom, String pathFileTo);// Rename file
+bool formatFS() ; // Formart file system
+void listFiles(String path); // list files from directoy
 
 ESP32Time rtc;
 
@@ -73,7 +84,6 @@ ESP32Time rtc;
 void setup()
 {
   Serial.begin(9600);
-  Serial.println("Start");
   rtc.setTime(SEGUNDOS, MINUTOS, HORA, DIA, MES, ANO);  // 17th Jan 2021 15:24:30
   pinMode(pwr_en, OUTPUT);
   pinMode (s0, OUTPUT);
@@ -82,6 +92,25 @@ void setup()
   digitalWrite(s0, LOW);
   digitalWrite(s1, LOW);
   digitalWrite(pwr_en, LOW);
+
+
+Serial.println("\nDescontingenciamento");
+delay(TIME_ON);
+
+Serial.println("\n -- Start Log tensiometry -- ");
+SPIFFS.begin(true);
+File rFile = SPIFFS.open("/Log_.txt", "r");
+String values;
+while (rFile.available()) {
+      values = rFile.readString();
+      Serial.println(values);
+      values = "";
+}
+rFile.close();
+Serial.println("\n -- Final Log tensiometry -- ");
+Serial.println("");
+delay(TIME_ON);
+formatFS();
   
 }
 
@@ -89,8 +118,11 @@ void loop()
 {
   getDataDebug();
   delay(10000);
+
 }
 
+
+/*--- Read Sensor Soil Moisure ---*/
 int ReadFrequency (int swp)
 {
 
@@ -116,8 +148,6 @@ int ReadFrequency (int swp)
     digitalWrite(s1,HIGH);
   }
 
-  
-
   delay(1000);
   float totalTime = 0;
   int highPulseTime = 0;
@@ -132,6 +162,7 @@ int ReadFrequency (int swp)
       highPulseTime = 0;
       lowPulseTime = 0;
       totalTime = 0;
+
 /*     
                     high
         |--|  |--|  |--|  |--|  |--|
@@ -218,6 +249,115 @@ int ReadFrequency (int swp)
 }
 
 
+/*--- Write File ---*/
+bool writeFile(String values, String pathFile, bool appending) {
+  char *mode = "w"; //open for writing (creates file if it doesn't exist). Deletes content and overwrites the file.
+  if (appending) mode = "a"; //open for appending (creates file if it doesn't exist)
+  //Serial.println("- Writing file: " + pathFile);
+  //Serial.println("- Values: " + values);
+  SPIFFS.begin(true);
+  File wFile = SPIFFS.open(pathFile, mode);
+  if (!wFile) {
+    Serial.println("- Failed to write file.");
+    return false;
+  } else {
+    wFile.println(values);
+   // Serial.println("- Written!");
+  }
+  wFile.close();
+  return true;
+}
+
+/*--- Read file ---*/
+String readFile(String pathFile) {
+  Serial.println("- Reading file: " + pathFile);
+  SPIFFS.begin(true);
+  File rFile = SPIFFS.open(pathFile, "r");
+  String values;
+  if (!rFile) {
+    Serial.println("- Failed to open file.");
+  } else {
+    while (rFile.available()) {
+      values += rFile.readString();
+    }
+    Serial.println("- File values: " + values);
+  }
+  rFile.close();
+  return values;
+}
+
+/*--- Delete File ---*/
+bool deleteFile(String pathFile) {
+  Serial.println("- Deleting file: " + pathFile);
+  SPIFFS.begin(true);
+  if (!SPIFFS.remove(pathFile)) {
+    Serial.println("- Delete failed.");
+    return false;
+  } else {
+    Serial.println("- File deleted!");
+    return true;
+  }
+}
+
+/*--- Rename file---*/
+void renameFile(String pathFileFrom, String pathFileTo) {
+  Serial.println("- Renaming file " + pathFileFrom + " to " + pathFileTo);
+  SPIFFS.begin(true);
+  if (!SPIFFS.rename(pathFileFrom, pathFileTo)) {
+    Serial.println("- Rename failed.");
+  } else {
+    Serial.println("- File renamed!");
+  }
+}
+
+/*--- Format File System ---*/
+bool formatFS() {
+
+  Serial.println("- Formatting file system...");
+  //lcd.clear();
+  //lcd.setCursor(0,1);
+  //lcd.print("Formating system");
+  SPIFFS.begin(true);
+  if (!SPIFFS.format()) {
+    Serial.println("- Format failed.");
+    return false;
+  } else {
+    Serial.println("- Formatted!");
+    return true;
+  }
+  //lcd.clear();
+}
+
+/*--- List Files From Directory ---*/
+void listFiles(String path) {
+  Serial.println("- Listing files: " + path);
+  SPIFFS.begin(true);
+  File root = SPIFFS.open(path);
+  if (!root) {
+    Serial.println("- Failed to open directory");
+    return;
+  }
+  if (!root.isDirectory()) {
+    Serial.println("- Not a directory: " + path);
+    return;
+  }
+
+  File file = root.openNextFile();
+  while (file) {
+    if (file.isDirectory()) {
+      Serial.print("- Dir: ");
+      Serial.println(file.name());
+    } else {
+      Serial.print("- File: ");
+      Serial.print(file.name());
+      Serial.print("\tSize: ");
+      Serial.println(file.size());
+    }
+    file = root.openNextFile();
+  }
+}
+
+/*--- Print Serial Port Debug---*/
 void getDataDebug()
 {
   digitalWrite(pwr_en, HIGH);//switch ON sensor 
@@ -225,26 +365,31 @@ void getDataDebug()
 
   Serial.println("====================================================================");
   String time = rtc.getTime("%d/%m/%y %H:%M:%S");
+  
   /****** SWP_1 *******/
   int irrometerfrequencyTemp1 = ReadFrequency(1);
   Serial.println(String(time) + " Primary Soil Sensor = " + String(irrometerfrequencyTemp1) + " Kpa");
   delay(100);
-  time = rtc.getTime("%d/%m/%y %H:%M:%S");
+  writeFile("---> " + time + irrometerfrequencyTemp1 + "Kpa", "/Log_.txt" , true);
+
    /****** SWP_2 *******/
   int irrometerfrequencyTemp2 = ReadFrequency(2);
   Serial.println(String(time) + " Secondary Soil Sensor = " + String(irrometerfrequencyTemp2) + " Kpa");
   delay(100);
-  time = rtc.getTime("%d/%m/%y %H:%M:%S");
+  writeFile("---> " + time + irrometerfrequencyTemp2 + "Kpa", "/Log_.txt" , true);
+
   /****** SWP_3 *******/
   int irrometerfrequencyTemp3 = ReadFrequency(3);
   Serial.println(String(time) + " Third Soil Sensor = " + String(irrometerfrequencyTemp3) + " Kpa");
   delay(100);
-  time = rtc.getTime("%d/%m/%y %H:%M:%S");
+  writeFile("---> " + time + irrometerfrequencyTemp3 + "Kpa", "/Log_.txt" , true);
+
   /****** SWP_4 *******/
   int irrometerfrequencyTemp4 = ReadFrequency(4);
   Serial.println(String(time) + " Fourth Soil Sensor = " + String(irrometerfrequencyTemp4) + " Kpa");
+  writeFile("---> " + time + irrometerfrequencyTemp4 + "Kpa", "/Log_.txt" , true);
   delay(100);
-  Serial.println("====================================================================");
 
   digitalWrite(pwr_en, LOW);//switch off sensor
+  Serial.println("====================================================================");
 }
