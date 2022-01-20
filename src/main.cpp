@@ -35,7 +35,7 @@
 =================================================================================================*/
 
 #include <Arduino.h>
-
+#include <ESP32Time.h>
 
 
 //==================================== Mapeamento de Hardware =================================== //
@@ -45,6 +45,13 @@
 #define s0 4 // Control Multiplex
 #define s1 5 // Control Multiplex
 
+// Data e hora de inicialização do esp32
+#define DIA 29
+#define MES 10
+#define ANO 2021
+#define HORA 14
+#define MINUTOS 6
+#define SEGUNDOS 30
 
 //=============================================================================================== //
 
@@ -54,9 +61,9 @@
 //============================================= Funções ========================================= //
 
 int ReadFrequency (int swp);
-void getData();
+void getDataDebug();
 
-
+ESP32Time rtc;
 
 //=============================================================================================== //
 
@@ -67,7 +74,8 @@ void setup()
 {
   Serial.begin(9600);
   Serial.println("Start");
-
+  rtc.setTime(SEGUNDOS, MINUTOS, HORA, DIA, MES, ANO);  // 17th Jan 2021 15:24:30
+  rtc.setTime(1609459200);  // 1st Jan 2021 00:00:00
   pinMode(pwr_en, OUTPUT);
   pinMode (s0, OUTPUT);
   pinMode (s1, OUTPUT);
@@ -80,8 +88,8 @@ void setup()
 
 void loop()
 {
-  getData();
-  delay(5000);
+  getDataDebug();
+  delay(10000);
 }
 
 int ReadFrequency (int swp)
@@ -108,6 +116,8 @@ int ReadFrequency (int swp)
     digitalWrite(s0,HIGH);
     digitalWrite(s1,HIGH);
   }
+
+  
 
   delay(1000);
   float totalTime = 0;
@@ -144,6 +154,8 @@ int ReadFrequency (int swp)
 
   }
   irrometerfrequencyTemp = freqcumulative / sample;
+
+  
 /*    
       kPa = 0                             for Hz > 6430
       kPa = 9 - (Hz - 4600) * 0.004286    for 4330 <= Hz <= 6430
@@ -204,30 +216,32 @@ int ReadFrequency (int swp)
   }
   
   return soil_moisture;
-  
 }
 
 
-void getData()
+void getDataDebug()
 {
-  digitalWrite(pwr_en, HIGH);//switch ON sensor
+  digitalWrite(pwr_en, HIGH);//switch ON sensor 
   delay(100);
 
+  Serial.println("====================================================================");
   /****** SWP_1 *******/
-  float irrometerfrequencyTemp1 = ReadFrequency(1);
-  Serial.println("Primary Soil Sensor = " + String(irrometerfrequencyTemp1) + " Hz");
-
+  int irrometerfrequencyTemp1 = ReadFrequency(1);
+  Serial.println("Primary Soil Sensor = " + String(irrometerfrequencyTemp1) + " Kpa");
+  delay(100);
    /****** SWP_2 *******/
-  float irrometerfrequencyTemp2 = ReadFrequency(2);
-  Serial.println("Secondary Soil Sensor = " + String(irrometerfrequencyTemp2) + " Hz");
-
+  int irrometerfrequencyTemp2 = ReadFrequency(2);
+  Serial.println("Secondary Soil Sensor = " + String(irrometerfrequencyTemp2) + " Kpa");
+  delay(100);
   /****** SWP_3 *******/
-  float irrometerfrequencyTemp3 = ReadFrequency(3);
-  Serial.println("Third Soil Sensor = " + String(irrometerfrequencyTemp3) + " Hz");
-
+  int irrometerfrequencyTemp3 = ReadFrequency(3);
+  Serial.println("Third Soil Sensor = " + String(irrometerfrequencyTemp3) + " Kpa");
+  delay(100);
   /****** SWP_4 *******/
-  float irrometerfrequencyTemp4 = ReadFrequency(4);
-  Serial.println("Fourth Soil Sensor = " + String(irrometerfrequencyTemp4) + " Hz");
+  int irrometerfrequencyTemp4 = ReadFrequency(4);
+  Serial.println("Fourth Soil Sensor = " + String(irrometerfrequencyTemp4) + " Kpa");
+  delay(100);
+  Serial.println("====================================================================");
 
   digitalWrite(pwr_en, LOW);//switch off sensor
 }
