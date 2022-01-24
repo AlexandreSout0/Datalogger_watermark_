@@ -36,6 +36,7 @@
 
 #include <Arduino.h>
 #include <ESP32Time.h>
+#include <LiquidCrystal_I2C.h>
 
 
 //==================================== Mapeamento de Hardware =================================== //
@@ -64,9 +65,10 @@ int ReadFrequency (int swp);
 void getDataDebug();
 
 ESP32Time rtc;
+LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+
 
 //=============================================================================================== //
-
 
 
 
@@ -82,19 +84,62 @@ void setup()
   digitalWrite(s0, LOW);
   digitalWrite(s1, LOW);
   digitalWrite(pwr_en, LOW);
+  lcd.init(); // initialize the lcd 
+  lcd.backlight(); // display light
+
+
   
 }
 
 void loop()
 {
+
   getDataDebug();
-  delay(10000);
+  //delay(100);
+  
+
+  int irrometer1 = 0;
+  int irrometer2 = 0;
+  int irrometer3 = 0;
+
+  /****** SWP_1 *******/
+  digitalWrite(pwr_en, HIGH);//switch ON sensor 
+  delay(100);
+  irrometer1 = ReadFrequency(1);
+  /****** SWP_2 *******/
+  delay(100);
+  irrometer2 = ReadFrequency(2);
+  /****** SWP_3 *******/
+  delay(100);
+  irrometer3 = ReadFrequency(3);
+  delay(100);
+  digitalWrite(pwr_en, LOW);//switch off sensor
+
+  lcd.clear();
+  lcd.setCursor(8,0);
+  lcd.print(rtc.getTime("%d/%m/%y"));
+
+  lcd.setCursor(0,1);
+  lcd.printf("%d",irrometer1);
+ 
+  lcd.setCursor(4,1);
+  lcd.printf("%d",irrometer2);
+
+  lcd.setCursor(8,1);
+  lcd.printf("%d",irrometer3);
+
+  lcd.setCursor(11,1);
+  lcd.print("[kpa]");
+
+
+
+
 }
 
 int ReadFrequency (int swp)
 {
 
-  delay(200);
+  delay(100);
   if (swp == 1)
   {
     digitalWrite(s0,LOW);
@@ -118,7 +163,7 @@ int ReadFrequency (int swp)
 
   
 
-  delay(1000);
+  delay(500);
   float totalTime = 0;
   int highPulseTime = 0;
   int lowPulseTime = 0;
@@ -138,7 +183,6 @@ int ReadFrequency (int swp)
       __|  |__|  |__|  |__|  |__|  |____  signal PWM of integrad circuit 555.
             low
 -----------------------------------------------> time
-
 */
       highPulseTime = pulseIn(swp_freq, HIGH); // Time the signal is high
       lowPulseTime = pulseIn(swp_freq, LOW); // Time the signal is low
@@ -153,7 +197,6 @@ int ReadFrequency (int swp)
 
   }
   irrometerfrequencyTemp = freqcumulative / sample;
-
   
 /*    
       kPa = 0                             for Hz > 6430
@@ -227,16 +270,19 @@ void getDataDebug()
   String time = rtc.getTime("%d/%m/%y %H:%M:%S");
   /****** SWP_1 *******/
   int irrometerfrequencyTemp1 = ReadFrequency(1);
+  lcd.setCursor(0,1);
   Serial.println(String(time) + " Primary Soil Sensor = " + String(irrometerfrequencyTemp1) + " Kpa");
   delay(100);
   time = rtc.getTime("%d/%m/%y %H:%M:%S");
    /****** SWP_2 *******/
   int irrometerfrequencyTemp2 = ReadFrequency(2);
+  lcd.setCursor(4,1);
   Serial.println(String(time) + " Secondary Soil Sensor = " + String(irrometerfrequencyTemp2) + " Kpa");
   delay(100);
   time = rtc.getTime("%d/%m/%y %H:%M:%S");
   /****** SWP_3 *******/
   int irrometerfrequencyTemp3 = ReadFrequency(3);
+  lcd.setCursor(4,1);
   Serial.println(String(time) + " Third Soil Sensor = " + String(irrometerfrequencyTemp3) + " Kpa");
   delay(100);
   time = rtc.getTime("%d/%m/%y %H:%M:%S");
