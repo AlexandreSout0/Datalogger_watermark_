@@ -69,7 +69,6 @@
 
 //============================================= Funções ========================================= //
 
-<<<<<<< HEAD
 int ReadFrequency (int swp);
 void getDataDebug();
 bool flag_i1 = NULL;
@@ -77,16 +76,6 @@ bool flag_i1 = NULL;
 double timeon;
 double timeoff;
 double total;
-=======
-int ReadFrequency (int swp); // Read Sensor Soil Moisure
-void getDataDebug(); // Print Serial Port Debug
-bool writeFile(String values, String pathFile, bool appending); // Write file
-String readFile(String pathFile);// Read file
-bool deleteFile(String pathFile); // Delete file
-void renameFile(String pathFileFrom, String pathFileTo);// Rename file
-bool formatFS() ; // Formart file system
-void listFiles(String path); // list files from directoy
->>>>>>> MASTER_LOG
 
 ESP32Time rtc;
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
@@ -107,38 +96,15 @@ void setup()
   digitalWrite(s0, LOW);
   digitalWrite(s1, LOW);
   digitalWrite(pwr_en, LOW);
-<<<<<<< HEAD
   lcd.init(); // initialize the lcd 
   lcd.backlight(); // display light
 
 
-=======
-
-
-Serial.println("\nDescontingenciamento");
-delay(TIME_ON);
-
-Serial.println("\n -- Start Log tensiometry -- ");
-SPIFFS.begin(true);
-File rFile = SPIFFS.open("/Log_.txt", "r");
-String values;
-while (rFile.available()) {
-      values = rFile.readString();
-      Serial.println(values);
-      values = "";
-}
-rFile.close();
-Serial.println("\n -- Final Log tensiometry -- ");
-Serial.println("");
-delay(TIME_ON);
-formatFS();
->>>>>>> MASTER_LOG
   
 }
 
 void loop()
 {
-<<<<<<< HEAD
  
   
 
@@ -232,21 +198,13 @@ void loop()
 
 
 
-=======
-  getDataDebug();
-  delay(10000);
->>>>>>> MASTER_LOG
 
 }
 
 
-<<<<<<< HEAD
 
 
 
-=======
-/*--- Read Sensor Soil Moisure ---*/
->>>>>>> MASTER_LOG
 int ReadFrequency (int swp)
 {
 
@@ -272,13 +230,9 @@ int ReadFrequency (int swp)
     digitalWrite(s1,HIGH);
   }
 
-<<<<<<< HEAD
   
 
   delay(500);
-=======
-  delay(1000);
->>>>>>> MASTER_LOG
   float totalTime = 0;
   int highPulseTime = 0;
   int lowPulseTime = 0;
