@@ -46,13 +46,16 @@
 #define s0 4 // Control Multiplex
 #define s1 5 // Control Multiplex
 
+#define pressure_call 26 // monitor de pressão irrigação
+#define pressure_back 25 // monitor de pressão irrigação
+
 // Data e hora de inicialização do esp32
-#define DIA 20
+#define DIA 24
 #define MES 1
 #define ANO 2022
 #define HORA 8
-#define MINUTOS 39
-#define SEGUNDOS 30
+#define MINUTOS 17
+#define SEGUNDOS 39
 
 //=============================================================================================== //
 
@@ -63,6 +66,11 @@
 
 int ReadFrequency (int swp);
 void getDataDebug();
+bool flag_i1 = NULL;
+
+double timeon;
+double timeoff;
+double total;
 
 ESP32Time rtc;
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
@@ -93,29 +101,82 @@ void setup()
 
 void loop()
 {
-
-  getDataDebug();
-  //delay(100);
+ 
   
+
+
+  pinMode (pressure_call, OUTPUT); // Define o pino como saida
+  pinMode (pressure_back, INPUT); // define o pino como entrada
+  digitalWrite(pressure_call, HIGH); // nivel logico alto para pino que vai para o sensor de pressão
+
+  //getDataDebug();
+  //delay(100);
+
+
+  if (digitalRead(pressure_back) == 0 && flag_i1 != 1 ){
+    delay(10000);
+    if (digitalRead(pressure_back) == 0 && flag_i1 != 1 ){
+      Serial.println("Sistema com Pressão");
+      timeon = millis();
+      flag_i1 = 1;
+    }
+    else{
+      return;
+    }
+  }
+
+  if (digitalRead(pressure_back) == 1 && flag_i1 == 1 ) {
+    delay(10000);
+    if (digitalRead(pressure_back) == 1 && flag_i1 == 1 ) {
+      Serial.println("Sistema sem Pressão");
+      timeoff = millis();
+      
+      total = timeoff-timeon;
+      total = total/60000;
+      Serial.println(total);
+      flag_i1 = NULL;
+    }
+    else{
+      return;
+    }
+  }
 
   int irrometer1 = 0;
   int irrometer2 = 0;
   int irrometer3 = 0;
 
-  /****** SWP_1 *******/
+  
   digitalWrite(pwr_en, HIGH);//switch ON sensor 
+
+  /****** SWP_1 *******/
   delay(100);
   irrometer1 = ReadFrequency(1);
+
   /****** SWP_2 *******/
   delay(100);
   irrometer2 = ReadFrequency(2);
+
   /****** SWP_3 *******/
   delay(100);
   irrometer3 = ReadFrequency(3);
+
   delay(100);
   digitalWrite(pwr_en, LOW);//switch off sensor
 
   lcd.clear();
+
+  lcd.setCursor(0,0);
+  lcd.print("Tensi ");
+  
+  if (flag_i1 == 1){
+  lcd.setCursor(6,0);
+  lcd.print("*");
+  }
+  else{
+      lcd.setCursor(6,0);
+      lcd.print("-");
+  }
+
   lcd.setCursor(8,0);
   lcd.print(rtc.getTime("%d/%m/%y"));
 
@@ -135,6 +196,10 @@ void loop()
 
 
 }
+
+
+
+
 
 int ReadFrequency (int swp)
 {
