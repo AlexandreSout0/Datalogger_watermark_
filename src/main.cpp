@@ -37,13 +37,10 @@
 #include <Arduino.h>
 #include <ESP32Time.h>
 #include <LiquidCrystal_I2C.h>
-<<<<<<< Updated upstream
 
 #include "FS.h"
 #include <SPIFFS.h>
 
-=======
->>>>>>> Stashed changes
 
 //==================================== Mapeamento de Hardware =================================== //
 
@@ -81,11 +78,7 @@ double timeoff;
 double total;
 
 ESP32Time rtc;
-<<<<<<< Updated upstream
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
-=======
-LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
->>>>>>> Stashed changes
 
 
 //=============================================================================================== //
@@ -94,24 +87,6 @@ LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars
 
 void setup()
 {
-
-  lcd.init();                      // initialize the lcd 
-  // Print a message to the LCD.
-  lcd.backlight();
-  lcd.setCursor(3,0);
-  lcd.print("Hello, world!");
-  lcd.setCursor(2,1);
-  lcd.print("Ywrobot Arduino!");
-   lcd.setCursor(0,2);
-  lcd.print("Arduino LCM IIC 2004");
-   lcd.setCursor(2,3);
-  lcd.print("Power By Ec-yuan!");
-
-
-
-  lcd.init(); // Initialize the lcd 
-  lcd.backlight();
-  lcd.setCursor(3,0);
   Serial.begin(9600);
   rtc.setTime(SEGUNDOS, MINUTOS, HORA, DIA, MES, ANO);  // 17th Jan 2021 15:24:30
   pinMode(pwr_en, OUTPUT);
@@ -225,7 +200,6 @@ void loop()
 
 
 }
-
 
 
 
