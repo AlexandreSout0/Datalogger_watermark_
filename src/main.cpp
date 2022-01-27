@@ -70,7 +70,7 @@
 //============================================= Funções ========================================= //
 
 int ReadFrequency (int swp);
-void getDataDebug();
+void DataLogger();
 bool flag_i1 = NULL;
 
 double timeon;
@@ -118,7 +118,7 @@ void loop()
 
 
   if (digitalRead(pressure_back) == 0 && flag_i1 != 1 ){
-    delay(10000);
+    delay(60000);
     if (digitalRead(pressure_back) == 0 && flag_i1 != 1 ){
       Serial.println("Sistema com Pressão");
       timeon = millis();
@@ -130,7 +130,7 @@ void loop()
   }
 
   if (digitalRead(pressure_back) == 1 && flag_i1 == 1 ) {
-    delay(10000);
+    delay(20000);
     if (digitalRead(pressure_back) == 1 && flag_i1 == 1 ) {
       Serial.println("Sistema sem Pressão");
       timeoff = millis();
@@ -439,12 +439,11 @@ void listFiles(String path) {
 }
 
 /*--- Print Serial Port Debug---*/
-void getDataDebug()
+void DataLogger()
 {
   digitalWrite(pwr_en, HIGH);//switch ON sensor 
   delay(100);
 
-  Serial.println("====================================================================");
   String time = rtc.getTime("%d/%m/%y %H:%M:%S");
   
   /****** SWP_1 *******/
@@ -468,12 +467,13 @@ void getDataDebug()
   delay(100);
   writeFile("---> " + time + irrometerfrequencyTemp3 + "Kpa", "/Log_.txt" , true);
 
+
   /****** SWP_4 *******/
-  int irrometerfrequencyTemp4 = ReadFrequency(4);
-  Serial.println(String(time) + " Fourth Soil Sensor = " + String(irrometerfrequencyTemp4) + " Kpa");
-  writeFile("---> " + time + irrometerfrequencyTemp4 + "Kpa", "/Log_.txt" , true);
-  delay(100);
+  //int irrometerfrequencyTemp4 = ReadFrequency(4);
+  //Serial.println(String(time) + " Fourth Soil Sensor = " + String(irrometerfrequencyTemp4) + " Kpa");
+  //writeFile("---> " + time + irrometerfrequencyTemp4 + "Kpa", "/Log_.txt" , true);
+  //delay(100);
 
   digitalWrite(pwr_en, LOW);//switch off sensor
-  Serial.println("====================================================================");
 }
+
