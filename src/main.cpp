@@ -62,12 +62,20 @@
 
 
 #define TIME_ON 10000 // Time before to sending logs on serial port
+#define TIME_LOG 3600000000 // INTERRUPÇÃO: 3600000000  = 1 hora (60000000 1 minuto)
+
 //=============================================================================================== //
 
 
 
 
 //============================================= Funções ========================================= //
+bool writeFile(String values, String pathFile, bool appending); // Write file
+String readFile(String pathFile);// Read file
+bool deleteFile(String pathFile); // Delete file
+void renameFile(String pathFileFrom, String pathFileTo);// Rename file
+bool formatFS() ; // Formart file system
+void listFiles(String path); // list files from directoy
 
 int ReadFrequency (int swp);
 void DataLogger();
@@ -76,6 +84,7 @@ bool flag_i1 = NULL;
 double timeon;
 double timeoff;
 double total;
+double globalTime;
 
 ESP32Time rtc;
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
@@ -99,7 +108,23 @@ void setup()
   lcd.init(); // initialize the lcd 
   lcd.backlight(); // display light
 
+  Serial.println("\nDescontingenciamento");
+  delay(TIME_ON);
 
+  Serial.println("\n -- Start Log tensiometry -- ");
+  SPIFFS.begin(true);
+  File rFile = SPIFFS.open("/Log_.txt", "r");
+  String values;
+  while (rFile.available()) {
+        values = rFile.readString();
+        Serial.println(values);
+        values = "";
+  }
+  rFile.close();
+  Serial.println("\n -- Final Log tensiometry -- ");
+  Serial.println("");
+  delay(TIME_ON);
+  formatFS();
   
 }
 
@@ -112,8 +137,6 @@ void loop()
   pinMode (pressure_back, INPUT); // define o pino como entrada
   digitalWrite(pressure_call, HIGH); // nivel logico alto para pino que vai para o sensor de pressão
 
-  //getDataDebug();
-  //delay(100);
 
 
   if (digitalRead(pressure_back) == 0 && flag_i1 != 1 ){
@@ -193,6 +216,15 @@ void loop()
 
   lcd.setCursor(11,1);
   lcd.print("[kpa]");
+
+
+  globalTime = millis();
+  if (globalTime >= TIME_LOG)
+  {
+    DataLogger();  
+  }
+
+
 
 }
 
