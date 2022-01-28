@@ -103,12 +103,11 @@ void setup()
   
 }
 
+
+
 void loop()
 {
  
-  
-
-
   pinMode (pressure_call, OUTPUT); // Define o pino como saida
   pinMode (pressure_back, INPUT); // define o pino como entrada
   digitalWrite(pressure_call, HIGH); // nivel logico alto para pino que vai para o sensor de pressão
@@ -134,7 +133,6 @@ void loop()
     if (digitalRead(pressure_back) == 1 && flag_i1 == 1 ) {
       Serial.println("Sistema sem Pressão");
       timeoff = millis();
-      
       total = timeoff-timeon;
       total = total/60000;
       Serial.println(total);
@@ -195,9 +193,6 @@ void loop()
 
   lcd.setCursor(11,1);
   lcd.print("[kpa]");
-
-
-
 
 }
 
@@ -265,6 +260,7 @@ int ReadFrequency (int swp)
       delay(10);
 
   }
+
   irrometerfrequencyTemp = freqcumulative / sample;
   
 /*    
