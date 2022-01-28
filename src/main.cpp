@@ -171,8 +171,8 @@ void loop()
   lcd.print("Tensi ");
   
   if (flag_i1 == 1){
-  lcd.setCursor(6,0);
-  lcd.print("*");
+      lcd.setCursor(6,0);
+      lcd.print("*");
   }
   else{
       lcd.setCursor(6,0);
