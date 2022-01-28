@@ -77,6 +77,8 @@ double timeon;
 double timeoff;
 double total;
 
+
+
 ESP32Time rtc;
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 
@@ -84,6 +86,16 @@ LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars
 //=============================================================================================== //
 
 
+volatile int interruptCounter;
+int totalInterruptCounter;
+hw_timer_t * timer = NULL;
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+ 
+void IRAM_ATTR onTimer() {
+  portENTER_CRITICAL_ISR(&timerMux);
+  interruptCounter++;
+  portEXIT_CRITICAL_ISR(&timerMux);
+}
 
 void setup()
 {
@@ -99,7 +111,10 @@ void setup()
   lcd.init(); // initialize the lcd 
   lcd.backlight(); // display light
 
-
+  timer = timerBegin(0, 80, true);
+  timerAttachInterrupt(timer, &onTimer, true);
+  timerAlarmWrite(timer, 60000000, true);
+  timerAlarmEnable(timer);
   
 }
 
@@ -113,7 +128,7 @@ void loop()
   pinMode (pressure_back, INPUT); // define o pino como entrada
   digitalWrite(pressure_call, HIGH); // nivel logico alto para pino que vai para o sensor de pressão
 
-  //getDataDebug();
+  //DataLogger();
   //delay(100);
 
 
@@ -134,7 +149,6 @@ void loop()
     if (digitalRead(pressure_back) == 1 && flag_i1 == 1 ) {
       Serial.println("Sistema sem Pressão");
       timeoff = millis();
-      
       total = timeoff-timeon;
       total = total/60000;
       Serial.println(total);
