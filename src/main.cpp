@@ -185,7 +185,6 @@ void loop()
       total = total/60000;
       Serial.println(total);
       writeFile("---> Start irrigation:" + timeOn + "End irrigation: " + timeOff + "Total: " + total , "/Log_IRR.txt" , true);
-
       flag_i1 = NULL;
     }
     else{
@@ -245,7 +244,7 @@ void loop()
   lcd.print("[kpa]");
 
 
-  globalTime = millis();
+  //globalTime = millis();
   if (globalTime >= TIME_LOG)
   {
     DataLogger();  
