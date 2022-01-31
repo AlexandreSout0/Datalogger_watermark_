@@ -51,7 +51,7 @@
 
 #define pressure_call 26 // monitor de pressão irrigação
 #define pressure_back 25 // monitor de pressão irrigação
-#define DEBOUNCE1 20000
+#define DEBOUNCE1 60000
 #define DEBOUNCE2 20000
 
 // Data e hora de inicialização do esp32
@@ -64,7 +64,7 @@
 
 
 #define TIME_ON 10000 // Time before to sending logs on serial port
-#define TIME_LOG 900000000 // INTERRUPÇÃO: 3600000000  = 1 hora (60000000 1 minuto)
+#define TIME_LOG 900000000 // INTERRUPÇÃO: 3600000000  = 1 hora (60000000 1 minuto)   900000000
 
 //=============================================================================================== //
 
@@ -200,7 +200,7 @@ void loop()
     if (analogRead(pressure_back) > 3000 && flag_i1 == true ) {
       timeOff = rtc.getTime(" %d/%m/%y %H:%M:%S ");
       Serial.println(" Sistema sem Pressão ");
-      Serial.print(timeOff);
+      Serial.println(timeOff);
       timeoff = millis();
       total = timeoff-timeon;
       total = total/60000;
@@ -212,8 +212,8 @@ void loop()
       return;
     }
   }
-  int teste23 = analogRead(pressure_back);
-  Serial.println(teste23);
+  //int teste23 = analogRead(pressure_back);
+  //Serial.println(teste23);
 
   int irrometer1 = 0;
   int irrometer2 = 0;
@@ -543,28 +543,28 @@ void DataLogger()
   lcd.setCursor(0,1);
   Serial.println(String(time) + " Primary Soil Sensor = " + String(irrometerfrequencyTemp1) + " Kpa");
   delay(100);
-  writeFile("---> " + time + irrometerfrequencyTemp1 + "Kpa", "/Log_.txt" , true);
 
    /****** SWP_2 *******/
   int irrometerfrequencyTemp2 = ReadFrequency(2);
   lcd.setCursor(4,1);
   Serial.println(String(time) + " Secondary Soil Sensor = " + String(irrometerfrequencyTemp2) + " Kpa");
   delay(100);
-  writeFile("---> " + time + irrometerfrequencyTemp2 + "Kpa", "/Log_.txt" , true);
 
   /****** SWP_3 *******/
   int irrometerfrequencyTemp3 = ReadFrequency(3);
   lcd.setCursor(4,1);
   Serial.println(String(time) + " Third Soil Sensor = " + String(irrometerfrequencyTemp3) + " Kpa");
   delay(100);
-  writeFile("---> " + time + irrometerfrequencyTemp3 + "Kpa", "/Log_.txt" , true);
 
 
   /****** SWP_4 *******/
   //int irrometerfrequencyTemp4 = ReadFrequency(4);
   //Serial.println(String(time) + " Fourth Soil Sensor = " + String(irrometerfrequencyTemp4) + " Kpa");
-  //writeFile("---> " + time + irrometerfrequencyTemp4 + "Kpa", "/Log_.txt" , true);
+
   //delay(100);
+
+  writeFile("---> " + time + " Sensor 30 cm " + irrometerfrequencyTemp1 + " [-kpa] " + " Sensor 60 cm " + irrometerfrequencyTemp2 + " [-kpa] " + " Sensor 90 cm " + irrometerfrequencyTemp3 + " [-kpa] ", "/Log_.txt", true);
+
 
   digitalWrite(pwr_en, LOW);//switch off sensor
 }
