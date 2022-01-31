@@ -51,6 +51,8 @@
 
 #define pressure_call 26 // monitor de pressão irrigação
 #define pressure_back 25 // monitor de pressão irrigação
+#define DEBOUNCE1 20000
+#define DEBOUNCE2 20000
 
 // Data e hora de inicialização do esp32
 #define DIA 24
@@ -62,7 +64,7 @@
 
 
 #define TIME_ON 10000 // Time before to sending logs on serial port
-#define TIME_LOG 3600000000 // INTERRUPÇÃO: 3600000000  = 1 hora (60000000 1 minuto)
+#define TIME_LOG 900000000 // INTERRUPÇÃO: 3600000000  = 1 hora (60000000 1 minuto)
 
 //=============================================================================================== //
 
@@ -95,6 +97,18 @@ LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars
 
 //=============================================================================================== //
 
+volatile int interruptCounter;
+int totalInterruptCounter;
+ 
+hw_timer_t * timer = NULL;
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+ 
+void IRAM_ATTR onTimer() {
+  portENTER_CRITICAL_ISR(&timerMux);
+  interruptCounter++;
+  portEXIT_CRITICAL_ISR(&timerMux);
+ 
+}
 
 
 void setup()
@@ -112,40 +126,47 @@ void setup()
   lcd.backlight(); // display light
 
   Serial.println("\nDescontingenciamento");
-delay(TIME_ON);
-lcd.setCursor(0,0);
-lcd.print("DESCONTING...");
+  delay(TIME_ON);
+  lcd.setCursor(0,0);
+  lcd.print("DESCONTING...");
 
-Serial.println("\n -- Start Log tensiometry -- ");
-SPIFFS.begin(true);
-File rFile = SPIFFS.open("/Log_.txt", "r");
-String values;
-while (rFile.available()) {
-      values = rFile.readString();
-      Serial.println(values);
-      values = "";
-}
-rFile.close();
-Serial.println("\n -- Final Log tensiometry -- ");
+  Serial.println("\n -- Start Log tensiometry -- ");
+  SPIFFS.begin(true);
+  File rFile = SPIFFS.open("/Log_.txt", "r");
+  String values;
+  while (rFile.available()) {
+        values = rFile.readString();
+        Serial.println(values);
+        values = "";
+  }
+  rFile.close();
+  Serial.println("\n -- Final Log tensiometry -- ");
 
-Serial.println("\n -- Start Log Irrigation -- ");
-SPIFFS.begin(true);
-File rFile2 = SPIFFS.open("/Log_IRR.txt", "r");
-String values2;
-while (rFile2.available()) {
-      values2 = rFile2.readString();
-      Serial.println(values2);
-      values2 = "";
-}
-rFile2.close();
-Serial.println("\n -- Final Log Irrigation -- ");
+  Serial.println("\n -- Start Log Irrigation -- ");
+  SPIFFS.begin(true);
+  File rFile2 = SPIFFS.open("/Log_IRR.txt", "r");
+  String values2;
+  while (rFile2.available()) {
+        values2 = rFile2.readString();
+        Serial.println(values2);
+        values2 = "";
+  }
+  rFile2.close();
+  Serial.println("\n -- Final Log Irrigation -- ");
 
-delay(TIME_ON);
+  delay(TIME_ON);
 
-formatFS();
+  formatFS();
 
-delay(1000);
-Serial.println("\n -- Final Log -- ");
+  delay(1000);
+  Serial.println("\n -- Final Log -- ");
+  Serial.println("\n");
+  Serial.println("\n");
+
+  timer = timerBegin(0, 80, true);
+  timerAttachInterrupt(timer, &onTimer, true);
+  timerAlarmWrite(timer, TIME_LOG , true);
+  timerAlarmEnable(timer);
   
 }
 
@@ -159,38 +180,40 @@ void loop()
   digitalWrite(pressure_call, HIGH); // nivel logico alto para pino que vai para o sensor de pressão
 
 
-  if (digitalRead(pressure_back) == 0 && flag_i1 != 1 ){
-    delay(60000);
-    if (digitalRead(pressure_back) == 0 && flag_i1 != 1 ){
+  if (analogRead(pressure_back) < 2000 && flag_i1 != true ){
+    delay(DEBOUNCE1);
+    if (analogRead(pressure_back) < 2000 && flag_i1 != true ){
       
       timeOn = rtc.getTime("%d/%m/%y %H:%M:%S");
-      Serial.println("Sistema com Pressão");
+      Serial.println(" Sistema com Pressão ");
       Serial.print(timeOn);
       timeon = millis();
-      flag_i1 = 1;
+      flag_i1 = true;
     }
     else{
       return;
     }
   }
 
-  if (digitalRead(pressure_back) == 1 && flag_i1 == 1 ) {
-    delay(20000);
-    if (digitalRead(pressure_back) == 1 && flag_i1 == 1 ) {
-      timeOff = rtc.getTime("%d/%m/%y %H:%M:%S");
-      Serial.println("Sistema sem Pressão");
+  if (analogRead(pressure_back) > 3000 && flag_i1 == true ) {
+    delay(DEBOUNCE2);
+    if (analogRead(pressure_back) > 3000 && flag_i1 == true ) {
+      timeOff = rtc.getTime(" %d/%m/%y %H:%M:%S ");
+      Serial.println(" Sistema sem Pressão ");
       Serial.print(timeOff);
       timeoff = millis();
       total = timeoff-timeon;
       total = total/60000;
       Serial.println(total);
-      writeFile("---> Start irrigation:" + timeOn + "End irrigation: " + timeOff + "Total: " + total , "/Log_IRR.txt" , true);
-      flag_i1 = NULL;
+      writeFile("---> Start irrigation: " + timeOn + " End irrigation: " + timeOff + "Total: " + total , "/Log_IRR.txt" , true);
+      flag_i1 = false;
     }
     else{
       return;
     }
   }
+  int teste23 = analogRead(pressure_back);
+  Serial.println(teste23);
 
   int irrometer1 = 0;
   int irrometer2 = 0;
@@ -244,13 +267,18 @@ void loop()
   lcd.print("[kpa]");
 
 
-  //globalTime = millis();
-  if (globalTime >= TIME_LOG)
-  {
-    DataLogger();  
+
+
+  if (interruptCounter > 0) {
+ 
+    portENTER_CRITICAL(&timerMux);
+    interruptCounter--;
+    portEXIT_CRITICAL(&timerMux);
+ 
+    totalInterruptCounter++;
+    DataLogger();
+ 
   }
-
-
 
 }
 
