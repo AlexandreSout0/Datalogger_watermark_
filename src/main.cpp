@@ -55,16 +55,16 @@
 #define DEBOUNCE2 20000
 
 // Data e hora de inicialização do esp32
-#define DIA 24
-#define MES 1
+#define DIA 11
+#define MES 2
 #define ANO 2022
-#define HORA 8
-#define MINUTOS 17
+#define HORA 11
+#define MINUTOS 12
 #define SEGUNDOS 39
 
 
 #define TIME_ON 10000 // Time before to sending logs on serial port
-#define TIME_LOG 900000000 // INTERRUPÇÃO: 3600000000  = 1 hora (60000000 1 minuto)   900000000
+#define TIME_LOG 7200000000 // INTERRUPÇÃO: 3600000000  = 1 hora (60000000 1 minuto)   900000000
 
 //=============================================================================================== //
 
