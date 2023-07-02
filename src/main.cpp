@@ -51,23 +51,33 @@
 
 #define pressure_call 26 // monitor de pressão irrigação
 #define pressure_back 25 // monitor de pressão irrigação
+#define DEBOUNCE1 60000
+#define DEBOUNCE2 20000
 
 // Data e hora de inicialização do esp32
-#define DIA 24
-#define MES 1
+#define DIA 28
+#define MES 10
 #define ANO 2022
-#define HORA 8
-#define MINUTOS 17
+#define HORA 9
+#define MINUTOS 28
 #define SEGUNDOS 39
 
 
 #define TIME_ON 10000 // Time before to sending logs on serial port
+#define TIME_LOG 7200000000 // INTERRUPÇÃO: 3600000000  = 1 hora (60000000 1 minuto)   900000000
+
 //=============================================================================================== //
 
 
 
 
 //============================================= Funções ========================================= //
+bool writeFile(String values, String pathFile, bool appending); // Write file
+String readFile(String pathFile);// Read file
+bool deleteFile(String pathFile); // Delete file
+void renameFile(String pathFileFrom, String pathFileTo);// Rename file
+bool formatFS() ; // Formart file system
+void listFiles(String path); // list files from directoy
 
 int ReadFrequency (int swp);
 void DataLogger();
@@ -76,6 +86,10 @@ bool flag_i1 = NULL;
 double timeon;
 double timeoff;
 double total;
+double globalTime;
+String timeOn;
+String timeOff;
+
 
 ESP32Time rtc;
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
@@ -83,6 +97,18 @@ LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars
 
 //=============================================================================================== //
 
+volatile int interruptCounter;
+int totalInterruptCounter;
+ 
+hw_timer_t * timer = NULL;
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+ 
+void IRAM_ATTR onTimer() {
+  portENTER_CRITICAL_ISR(&timerMux);
+  interruptCounter++;
+  portEXIT_CRITICAL_ISR(&timerMux);
+ 
+}
 
 
 void setup()
@@ -99,7 +125,48 @@ void setup()
   lcd.init(); // initialize the lcd 
   lcd.backlight(); // display light
 
+  Serial.println("\nDescontingenciamento");
+  delay(TIME_ON);
+  lcd.setCursor(0,0);
+  lcd.print("DESCONTING...");
 
+  Serial.println("\n -- Start Log tensiometry -- ");
+  SPIFFS.begin(true);
+  File rFile = SPIFFS.open("/Log_.txt", "r");
+  String values;
+  while (rFile.available()) {
+        values = rFile.readString();
+        Serial.println(values);
+        values = "";
+  }
+  rFile.close();
+  Serial.println("\n -- Final Log tensiometry -- ");
+
+  Serial.println("\n -- Start Log Irrigation -- ");
+  SPIFFS.begin(true);
+  File rFile2 = SPIFFS.open("/Log_IRR.txt", "r");
+  String values2;
+  while (rFile2.available()) {
+        values2 = rFile2.readString();
+        Serial.println(values2);
+        values2 = "";
+  }
+  rFile2.close();
+  Serial.println("\n -- Final Log Irrigation -- ");
+
+  delay(TIME_ON);
+
+  formatFS();
+
+  delay(1000);
+  Serial.println("\n -- Final Log -- ");
+  Serial.println("\n");
+  Serial.println("\n");
+
+  timer = timerBegin(0, 80, true);
+  timerAttachInterrupt(timer, &onTimer, true);
+  timerAlarmWrite(timer, TIME_LOG , true);
+  timerAlarmEnable(timer);
   
 }
 
@@ -112,36 +179,41 @@ void loop()
   pinMode (pressure_back, INPUT); // define o pino como entrada
   digitalWrite(pressure_call, HIGH); // nivel logico alto para pino que vai para o sensor de pressão
 
-  //getDataDebug();
-  //delay(100);
 
-
-  if (digitalRead(pressure_back) == 0 && flag_i1 != 1 ){
-    delay(60000);
-    if (digitalRead(pressure_back) == 0 && flag_i1 != 1 ){
-      Serial.println("Sistema com Pressão");
+  if (analogRead(pressure_back) < 2000 && flag_i1 != true ){
+    delay(DEBOUNCE1);
+    if (analogRead(pressure_back) < 2000 && flag_i1 != true ){
+      
+      timeOn = rtc.getTime("%d/%m/%y %H:%M:%S");
+      Serial.println(" Sistema com Pressão ");
+      Serial.print(timeOn);
       timeon = millis();
-      flag_i1 = 1;
+      flag_i1 = true;
     }
     else{
       return;
     }
   }
 
-  if (digitalRead(pressure_back) == 1 && flag_i1 == 1 ) {
-    delay(20000);
-    if (digitalRead(pressure_back) == 1 && flag_i1 == 1 ) {
-      Serial.println("Sistema sem Pressão");
+  if (analogRead(pressure_back) > 3000 && flag_i1 == true ) {
+    delay(DEBOUNCE2);
+    if (analogRead(pressure_back) > 3000 && flag_i1 == true ) {
+      timeOff = rtc.getTime(" %d/%m/%y %H:%M:%S ");
+      Serial.println(" Sistema sem Pressão ");
+      Serial.println(timeOff);
       timeoff = millis();
       total = timeoff-timeon;
       total = total/60000;
       Serial.println(total);
-      flag_i1 = NULL;
+      writeFile("---> Start irrigation: " + timeOn + " End irrigation: " + timeOff + "Total: " + total , "/Log_IRR.txt" , true);
+      flag_i1 = false;
     }
     else{
       return;
     }
   }
+  //int teste23 = analogRead(pressure_back);
+  //Serial.println(teste23);
 
   int irrometer1 = 0;
   int irrometer2 = 0;
@@ -194,7 +266,31 @@ void loop()
   lcd.setCursor(11,1);
   lcd.print("[kpa]");
 
+
+
+
+  if (interruptCounter > 0) {
+ 
+    portENTER_CRITICAL(&timerMux);
+    interruptCounter--;
+    portEXIT_CRITICAL(&timerMux);
+ 
+    totalInterruptCounter++;
+    DataLogger();
+ 
+  }
+
 }
+
+
+
+//==============================================================================//
+//==============================================================================//
+//==============================================================================//
+//==============================================================================//
+
+
+
 
 
 
@@ -447,28 +543,28 @@ void DataLogger()
   lcd.setCursor(0,1);
   Serial.println(String(time) + " Primary Soil Sensor = " + String(irrometerfrequencyTemp1) + " Kpa");
   delay(100);
-  writeFile("---> " + time + irrometerfrequencyTemp1 + "Kpa", "/Log_.txt" , true);
 
    /****** SWP_2 *******/
   int irrometerfrequencyTemp2 = ReadFrequency(2);
   lcd.setCursor(4,1);
   Serial.println(String(time) + " Secondary Soil Sensor = " + String(irrometerfrequencyTemp2) + " Kpa");
   delay(100);
-  writeFile("---> " + time + irrometerfrequencyTemp2 + "Kpa", "/Log_.txt" , true);
 
   /****** SWP_3 *******/
   int irrometerfrequencyTemp3 = ReadFrequency(3);
   lcd.setCursor(4,1);
   Serial.println(String(time) + " Third Soil Sensor = " + String(irrometerfrequencyTemp3) + " Kpa");
   delay(100);
-  writeFile("---> " + time + irrometerfrequencyTemp3 + "Kpa", "/Log_.txt" , true);
 
 
   /****** SWP_4 *******/
   //int irrometerfrequencyTemp4 = ReadFrequency(4);
   //Serial.println(String(time) + " Fourth Soil Sensor = " + String(irrometerfrequencyTemp4) + " Kpa");
-  //writeFile("---> " + time + irrometerfrequencyTemp4 + "Kpa", "/Log_.txt" , true);
+
   //delay(100);
+
+  writeFile("---> " + time + " Sensor 30 cm " + irrometerfrequencyTemp1 + " [-kpa] " + " Sensor 60 cm " + irrometerfrequencyTemp2 + " [-kpa] " + " Sensor 90 cm " + irrometerfrequencyTemp3 + " [-kpa] ", "/Log_.txt", true);
+
 
   digitalWrite(pwr_en, LOW);//switch off sensor
 }
