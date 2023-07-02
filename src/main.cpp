@@ -37,9 +37,12 @@
 #include <Arduino.h>
 #include <ESP32Time.h>
 #include <LiquidCrystal_I2C.h>
+<<<<<<< Updated upstream
 
 #include "FS.h"
 #include <SPIFFS.h>
+=======
+>>>>>>> Stashed changes
 
 
 //==================================== Mapeamento de Hardware =================================== //
@@ -51,6 +54,7 @@
 
 #define pressure_call 26 // monitor de pressão irrigação
 #define pressure_back 25 // monitor de pressão irrigação
+<<<<<<< Updated upstream
 #define DEBOUNCE1 60000
 #define DEBOUNCE2 20000
 
@@ -66,18 +70,40 @@
 #define TIME_ON 10000 // Time before to sending logs on serial port
 #define TIME_LOG 7200000000 // INTERRUPÇÃO: 3600000000  = 1 hora (60000000 1 minuto)   900000000
 
+=======
+
+// Data e hora de inicialização do esp32
+#define DIA 24
+#define MES 1
+#define ANO 2022
+#define HORA 8
+#define MINUTOS 17
+#define SEGUNDOS 39
+
+>>>>>>> Stashed changes
 //=============================================================================================== //
 
 
 
 
 //============================================= Funções ========================================= //
+<<<<<<< Updated upstream
 bool writeFile(String values, String pathFile, bool appending); // Write file
 String readFile(String pathFile);// Read file
 bool deleteFile(String pathFile); // Delete file
 void renameFile(String pathFileFrom, String pathFileTo);// Rename file
 bool formatFS() ; // Formart file system
 void listFiles(String path); // list files from directoy
+=======
+
+int ReadFrequency (int swp);
+void getDataDebug();
+bool flag_i1 = NULL;
+
+double timeon;
+double timeoff;
+double total;
+>>>>>>> Stashed changes
 
 int ReadFrequency (int swp);
 void DataLogger();
@@ -110,10 +136,10 @@ void IRAM_ATTR onTimer() {
  
 }
 
-
 void setup()
 {
   Serial.begin(9600);
+  Serial.println("Start");
   rtc.setTime(SEGUNDOS, MINUTOS, HORA, DIA, MES, ANO);  // 17th Jan 2021 15:24:30
   pinMode(pwr_en, OUTPUT);
   pinMode (s0, OUTPUT);
@@ -130,6 +156,7 @@ void setup()
   lcd.setCursor(0,0);
   lcd.print("DESCONTING...");
 
+<<<<<<< Updated upstream
   Serial.println("\n -- Start Log tensiometry -- ");
   SPIFFS.begin(true);
   File rFile = SPIFFS.open("/Log_.txt", "r");
@@ -167,6 +194,8 @@ void setup()
   timerAttachInterrupt(timer, &onTimer, true);
   timerAlarmWrite(timer, TIME_LOG , true);
   timerAlarmEnable(timer);
+=======
+>>>>>>> Stashed changes
   
 }
 
@@ -175,10 +204,17 @@ void setup()
 void loop()
 {
  
+<<<<<<< Updated upstream
+=======
+  
+
+
+>>>>>>> Stashed changes
   pinMode (pressure_call, OUTPUT); // Define o pino como saida
   pinMode (pressure_back, INPUT); // define o pino como entrada
   digitalWrite(pressure_call, HIGH); // nivel logico alto para pino que vai para o sensor de pressão
 
+<<<<<<< Updated upstream
 
   if (analogRead(pressure_back) < 2000 && flag_i1 != true ){
     delay(DEBOUNCE1);
@@ -189,12 +225,25 @@ void loop()
       Serial.print(timeOn);
       timeon = millis();
       flag_i1 = true;
+=======
+  //getDataDebug();
+  //delay(100);
+
+
+  if (digitalRead(pressure_back) == 0 && flag_i1 != 1 ){
+    delay(10000);
+    if (digitalRead(pressure_back) == 0 && flag_i1 != 1 ){
+      Serial.println("Sistema com Pressão");
+      timeon = millis();
+      flag_i1 = 1;
+>>>>>>> Stashed changes
     }
     else{
       return;
     }
   }
 
+<<<<<<< Updated upstream
   if (analogRead(pressure_back) > 3000 && flag_i1 == true ) {
     delay(DEBOUNCE2);
     if (analogRead(pressure_back) > 3000 && flag_i1 == true ) {
@@ -207,13 +256,28 @@ void loop()
       Serial.println(total);
       writeFile("---> Start irrigation: " + timeOn + " End irrigation: " + timeOff + "Total: " + total , "/Log_IRR.txt" , true);
       flag_i1 = false;
+=======
+  if (digitalRead(pressure_back) == 1 && flag_i1 == 1 ) {
+    delay(10000);
+    if (digitalRead(pressure_back) == 1 && flag_i1 == 1 ) {
+      Serial.println("Sistema sem Pressão");
+      timeoff = millis();
+      
+      total = timeoff-timeon;
+      total = total/60000;
+      Serial.println(total);
+      flag_i1 = NULL;
+>>>>>>> Stashed changes
     }
     else{
       return;
     }
   }
+<<<<<<< Updated upstream
   //int teste23 = analogRead(pressure_back);
   //Serial.println(teste23);
+=======
+>>>>>>> Stashed changes
 
   int irrometer1 = 0;
   int irrometer2 = 0;
@@ -243,8 +307,13 @@ void loop()
   lcd.print("Tensi ");
   
   if (flag_i1 == 1){
+<<<<<<< Updated upstream
       lcd.setCursor(6,0);
       lcd.print("*");
+=======
+  lcd.setCursor(6,0);
+  lcd.print("*");
+>>>>>>> Stashed changes
   }
   else{
       lcd.setCursor(6,0);
@@ -268,6 +337,7 @@ void loop()
 
 
 
+<<<<<<< Updated upstream
 
   if (interruptCounter > 0) {
  
@@ -279,11 +349,14 @@ void loop()
     DataLogger();
  
   }
+=======
+>>>>>>> Stashed changes
 
 }
 
 
 
+<<<<<<< Updated upstream
 //==============================================================================//
 //==============================================================================//
 //==============================================================================//
@@ -293,6 +366,8 @@ void loop()
 
 
 
+=======
+>>>>>>> Stashed changes
 
 
 int ReadFrequency (int swp)
@@ -336,7 +411,6 @@ int ReadFrequency (int swp)
       highPulseTime = 0;
       lowPulseTime = 0;
       totalTime = 0;
-
 /*     
                     high
         |--|  |--|  |--|  |--|  |--|
@@ -356,7 +430,10 @@ int ReadFrequency (int swp)
       delay(10);
 
   }
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
   irrometerfrequencyTemp = freqcumulative / sample;
   
 /*    
@@ -422,6 +499,7 @@ int ReadFrequency (int swp)
 }
 
 
+<<<<<<< Updated upstream
 /*--- Write File ---*/
 bool writeFile(String values, String pathFile, bool appending) {
   char *mode = "w"; //open for writing (creates file if it doesn't exist). Deletes content and overwrites the file.
@@ -532,29 +610,40 @@ void listFiles(String path) {
 
 /*--- Print Serial Port Debug---*/
 void DataLogger()
+=======
+void getDataDebug()
+>>>>>>> Stashed changes
 {
   digitalWrite(pwr_en, HIGH);//switch ON sensor 
   delay(100);
 
   String time = rtc.getTime("%d/%m/%y %H:%M:%S");
-  
   /****** SWP_1 *******/
   int irrometerfrequencyTemp1 = ReadFrequency(1);
   lcd.setCursor(0,1);
   Serial.println(String(time) + " Primary Soil Sensor = " + String(irrometerfrequencyTemp1) + " Kpa");
   delay(100);
+<<<<<<< Updated upstream
 
+=======
+  time = rtc.getTime("%d/%m/%y %H:%M:%S");
+>>>>>>> Stashed changes
    /****** SWP_2 *******/
   int irrometerfrequencyTemp2 = ReadFrequency(2);
   lcd.setCursor(4,1);
   Serial.println(String(time) + " Secondary Soil Sensor = " + String(irrometerfrequencyTemp2) + " Kpa");
   delay(100);
+<<<<<<< Updated upstream
 
+=======
+  time = rtc.getTime("%d/%m/%y %H:%M:%S");
+>>>>>>> Stashed changes
   /****** SWP_3 *******/
   int irrometerfrequencyTemp3 = ReadFrequency(3);
   lcd.setCursor(4,1);
   Serial.println(String(time) + " Third Soil Sensor = " + String(irrometerfrequencyTemp3) + " Kpa");
   delay(100);
+<<<<<<< Updated upstream
 
 
   /****** SWP_4 *******/
@@ -565,6 +654,14 @@ void DataLogger()
 
   writeFile("---> " + time + " Sensor 30 cm " + irrometerfrequencyTemp1 + " [-kpa] " + " Sensor 60 cm " + irrometerfrequencyTemp2 + " [-kpa] " + " Sensor 90 cm " + irrometerfrequencyTemp3 + " [-kpa] ", "/Log_.txt", true);
 
+=======
+  time = rtc.getTime("%d/%m/%y %H:%M:%S");
+  /****** SWP_4 *******/
+  int irrometerfrequencyTemp4 = ReadFrequency(4);
+  Serial.println(String(time) + " Fourth Soil Sensor = " + String(irrometerfrequencyTemp4) + " Kpa");
+  delay(100);
+  Serial.println("====================================================================");
+>>>>>>> Stashed changes
 
   digitalWrite(pwr_en, LOW);//switch off sensor
 }
